@@ -1,0 +1,32 @@
+{{- /*
+      $deployment contains the "metadata" and "spec" parts of the Deployment object.
+      Note that the "spec" element does not include:
+      - "selector" (LabelSelector), this is configured based on convention.
+      - "template" (PodTemplateSpec), this is generated separately
+    */ -}}
+{{- $deployment := mergeOverwrite (.Values | include "feature.legacy-deployment" | fromYaml) (default (dict) .Values.deployment) | 
+      include "feature.deployment" | fromYaml -}}
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name | quote }}
+  labels:
+    {{- include "helpers.defaultLabels" . | nindent 4 }}
+    {{- if "labels" | hasKey $deployment.metadata }} 
+      {{- $deployment.metadata.labels | toYaml | nindent 4 }}
+    {{- end }}
+  {{- if "annotations" | hasKey $deployment.metadata}}
+  annotations:
+   {{- $deployment.metadata.annotations | toYaml | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if gt ($deployment.spec | len) 0 }}
+    {{- $deployment.spec | toYaml | nindent 2 }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "helpers.selectorLabels" . | nindent 6 }}
+  template:
+    {{- include "k8s.podTemplateSpec" . | nindent 4}}
+
