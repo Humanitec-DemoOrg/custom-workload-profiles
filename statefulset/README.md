@@ -1,7 +1,7 @@
 ```bash
 export HUMANITEC_ORG=FIXME
 
-WORKLOAD_PROFILE=statefulset
+WORKLOAD_PROFILE=default-module
 
 cd ${WORKLOAD_PROFILE}
 

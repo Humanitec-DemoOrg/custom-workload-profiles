@@ -1,0 +1,278 @@
+labels:
+  humanitec/deployment-id: "5r64hdfrf"
+
+annotations:
+   prometheus.io/path: /metrics
+
+minReadySeconds: 0
+progressDeadlineSeconds: 600
+
+# PodSpec properties
+affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/e2e-az-name
+          operator: In
+          values:
+          - e2e-az1
+          - e2e-az2
+    preferredDuringSchedulingIgnoredDuringExecution:
+    - weight: 1
+      preference:
+        matchExpressions:
+        - key: another-node-label-key
+          operator: In
+          values:
+          - another-node-label-value
+
+automountServiceAccountToken: false
+
+hostAliases:
+- ip: "127.0.0.1"
+  hostnames:
+  - "foo.local"
+  - "bar.local"
+- ip: "10.1.2.3"
+  hostnames:
+  - "foo.remote"
+  - "bar.remote"
+
+hostIPC: true
+
+hostNetwork: true
+
+hostPID: true
+
+hostname: my-service
+
+nodeName: test-name
+
+nodeSelector:
+  disktype: ssd
+
+preemptionPolicy: Never
+
+priority: 7189
+
+priorityClassName: high-priority
+
+readinessGates:
+- conditionType: "www.example.com/feature-1"
+
+runtimeClassName: my-name
+
+schedulerName: my-scheduler
+
+securityContext:
+    runAsUser: 1000
+    runAsGroup: 3000
+    fsGroup: 2000
+
+setHostnameAsFQDN: true
+
+shareProcessNamespace: true
+
+subdomain: default-subdomain
+
+tolerations:
+- key: "key1"
+  operator: "Exists"
+  effect: "NoSchedule"
+
+topologySpreadConstraints:
+- maxSkew: 1
+  topologyKey: zone
+  whenUnsatisfiable: DoNotSchedule
+  labelSelector:
+    matchLabels:
+      foo: bar
+
+replicas: 0
+
+containers:
+  main:
+    id: walhalldebug
+    image: dev-registry.humanitec.io/humanitec-hackteam5/walhall-debug:1.0.1
+    imagePullPolicy: Always
+
+    liveness_probe:
+      type: "http"
+      path: /health
+      port: 8080
+      scheme: "http"
+      timeoutSeconds: 5
+
+    readiness_probe:
+      type: "command"
+      command: ["bash", "health.sh"]
+
+    startup_probe:
+      type: "tcp"
+      port: 8080
+
+    command: ["node", "init.js"]
+    args: ["start", "frontend"]
+
+    lifecycle:
+      preStop:
+        type: "command"
+        command: ["bash", "-c", "echo Hello from the preStop handler"]
+      postStart:
+        type: "http"
+        host: "example.com"
+        path: /index
+        port: 80
+        scheme: "https"
+        headers:
+          Auth: "Token"
+
+    variables:
+      REDIS_HOST: "127.0.0.1"
+      REDIS_PORT: "6379"
+
+    env:
+      - name: API_TOKEN
+        valueFrom:
+          secretKeyRef:
+            key: API_TOKEN
+            name: walhall-debug-secrets-walhall-debug
+      - name: _DOWNWARD_API_POD_STATUS_PODIP
+        valueFrom:
+          fieldRef:
+            fieldPath: status.podIP
+      - name: POD_IP_URL
+        value: "http://$(_DOWNWARD_API_POD_STATUS_PODIP):8080"
+      - name: _DOWNWARD_API_CONTAINER_MAIN_REQUESTS_CPU
+        valueFrom:
+          resourceFieldRef:
+            containerName: main
+            resource: requests.cpu
+      - name: CPU_REQUEST
+        value: $(_DOWNWARD_API_CONTAINER_MAIN_REQUESTS_CPU)
+
+    securityContext:
+      allowPrivilegeEscalation: true
+      privileged: true
+    stdin: false
+    stdinOnce: true
+    terminateMessagePath: /var/termination-msg
+    terminationMessagePolicy: File
+    tty: false
+    volumeDevices:
+    - devicePath: /dev/sde1
+      name: block-pvc
+    volumeMounts:
+      - name: my-volume
+        mountPath: "/mnt/store1"
+        readOnly: false
+      - name: my-projected-volume-a
+        mountPath: "/a"
+        readOnly: true
+    volume_mounts:
+      /mount:
+        id: "volumes.test"
+        read_only: true
+        sub_path: "/sub"
+    workingDir: /app/bin
+  sidecar:
+    id: simplegw
+    image: dev-registry.humanitec.io/humanitec-hackteam5/simplegw:0.0.1
+
+serviceAccountName: vault-tokenreview
+restartPolicy: onFailure
+terminationGracePeriodSeconds: 60
+
+ingress:
+   "*.newapp.io":
+     http:
+       /:
+         port: 80
+
+tls:
+  cn: "*.newapp.io"
+  secret:
+    tls.crt: "cert"
+    tls.key: "key"
+
+service:
+  annotations:
+    "cloud.google.com/neg": '{"ingress": true}'
+  labels:
+    my-label: label
+    other-label: my-other-label
+  ports:
+    my-port:
+      service_port: 80
+      container_port: 8080
+
+
+volumes:
+  my-volume:
+    type: emptyDir
+  my-volume-2:
+    type: emptyDir
+    source:
+      medium: memory
+      sizeLimit: "2G"
+  my-projected-volume-a:
+    type: projected
+    secret:
+      items:
+        - key: my-container-a-b-file1.txt
+          path: b/file1.txt
+    configMap:
+      items:
+        - key: my-container-a-c-file2.txt
+          path: c/file2.txt
+
+# Module-level configmap
+variables:
+  my-container-a-c-file2.txt: |
+    first line of the file
+    second line of the file
+
+# Example of specifing replicas and strategy
+
+# replicas: 2
+
+# strategy:
+#   type: RollingUpdate
+#   rollingUpdate:
+#     maxUnavailable: 2
+#     maxSurge: 1
+
+extraObjects:
+  - apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
+      name: 2fd4e1c67a2d28fced849ee1bb76e7391b93eb12-claim
+    spec:
+      accessModes:
+        - ReadWriteMany
+      storageClassName: standard
+      volumeName: 2fd4e1c67a2d28fced849ee1bb76e7391b93eb12-volume
+      resources:
+        requests:
+          storage: 1T
+  - apiVersion: v1
+    kind: PersistentVolume
+    metadata:
+      name: 2fd4e1c67a2d28fced849ee1bb76e7391b93eb12-volume
+    spec:
+      capacity:
+        storage: 1T
+      accessModes:
+        - ReadWriteMany
+      nfs:
+        server: "nfs-server.default.svc.cluster.local"
+        path: "/staging_nfs"
+
+extraVolumes:
+  - name: 2fd4e1c67a2d28fced849ee1bb76e7391b93eb12-volume
+    persistentVolumeClaim:
+      claimName: 2fd4e1c67a2d28fced849ee1bb76e7391b93eb12-claim
+
+imagePullSecrets:
+  - name: regcred
