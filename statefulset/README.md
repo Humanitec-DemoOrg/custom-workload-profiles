@@ -2,11 +2,15 @@
 export HUMANITEC_ORG=FIXME
 
 WORKLOAD_PROFILE=default-module
+```
 
-cd ${WORKLOAD_PROFILE}
+```bash
+helm template ${WORKLOAD_PROFILE} -f ${WORKLOAD_PROFILE}/sample-new-schema.yaml --debug
+```
 
+```bash
 payload=$(cat ${WORKLOAD_PROFILE}/profile.json | \
-  jq -rM '. + {"id": "'${WORKLOAD_PROFILE}'", "version": "1.0.0", "workload_profile_chart": { "id": "'${HUMANITEC_ORG}'/'${WORKLOAD_PROFILE}'", "version": "latest" } }')
+  jq -rM '. + {"id": "'${WORKLOAD_PROFILE}'", "version": "1.0.0", "workload_profile_chart": { "id": "'${WORKLOAD_PROFILE}'", "version": "latest" } }')
 
 humctl api post /orgs/${HUMANITEC_ORG}/workload-profiles \
   -d "$payload"
