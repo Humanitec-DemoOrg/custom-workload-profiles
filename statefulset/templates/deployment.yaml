@@ -8,7 +8,7 @@
       include "feature.deployment" | fromYaml -}}
 
 apiVersion: apps/v1
-kind: StatefulSet
+kind: Deployment
 metadata:
   name: {{ .Release.Name | quote }}
   labels:
