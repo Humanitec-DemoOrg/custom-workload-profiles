@@ -2,13 +2,13 @@
 export HUMANITEC_ORG=FIXME
 export HUMANITEC_TOKEN=FIXME
 
-WORKLOAD_PROFILE=default-module
+WORKLOAD_PROFILE=init-containers
 ```
 
 ## Test locally the Helm chart
 
 ```bash
-helm template ${WORKLOAD_PROFILE} -f ${WORKLOAD_PROFILE}/sample-new-schema.yaml --debug
+helm template ${WORKLOAD_PROFILE} -f ${WORKLOAD_PROFILE}/sample-init-containers.yaml --debug
 ```
 
 ## Register the Workload Profile
@@ -42,9 +42,24 @@ Then, to use this custom workload profile, you'll need to use the `humanitec.sco
 ```yaml
 apiVersion: humanitec.org/v1b1
 profile: ${HUMANITEC_ORG}/${WORKLOAD_PROFILE}
+spec:
+  containers:
+    test2:
+      isInitContainer: true
+```
+And this `score.yaml` file:
+```yaml
+apiVersion: score.dev/v1b1
+metadata:
+  name: test
+containers:
+  test:
+    image: .
+  test2:
+    image: .
 ```
 
-And when deploying the Score file, you need to use the `--extensions` parameter:
+And then deploy your workload:
 ```bash
 humctl score deploy -f score.yaml --extensions humanitec.score.yaml
 ```

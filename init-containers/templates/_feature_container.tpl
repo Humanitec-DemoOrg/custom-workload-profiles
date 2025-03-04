@@ -117,14 +117,15 @@ exec:
   Generates a list of Kubernetes Container objects in YAML format.
 
   Expects a dict with 3 parameters: "containers", "defaults" and "resPrefix"
-  "containers" (map)    content of .Values.containers
-  "defaults"   (map)    an object that will be applied to each container if those properties don't exist
-  "resPrefix"  (string) the prefix for the configMap used for environment variables
+  "containers"    (map)    content of .Values.containers
+  "defaults"      (map)    an object that will be applied to each container if those properties don't exist
+  "resPrefix"     (string) the prefix for the configMap used for environment variables
+  "forInitContainers" (bool)   if this for initContainers
   Returns: a YAML array of Kubernetes Container objects.
 */ -}}
 {{- define "feature.containers" }}
   {{- range $id, $container := .containers }}
-
+  {{- if or (and $container.isInitContainer $.forInitContainers) (and (not $container.isInitContainer) (not $.forInitContainers)) -}}
   {{- /*
     This is a shallow defaults.
   */ -}}
@@ -135,6 +136,7 @@ exec:
   {{- end }}
 
 - {{ (dict "name" $id "resPrefix" $.resPrefix "container" $container) | include "feature.container" | fromYaml | toRawJson }}
+  {{- end }}
   {{- end }}
 {{- end }}
 

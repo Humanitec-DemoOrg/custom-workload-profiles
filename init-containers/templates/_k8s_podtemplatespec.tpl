@@ -29,13 +29,22 @@
   */ -}}
   {{-
       $containers := (dict
-      "containers" .Values.containers
-      "defaults"   (dict "resources" .Values.default_container_resources)
-      "resPrefix"   .Release.Name
+      "containers"        .Values.containers
+      "defaults"          (dict "resources" .Values.default_container_resources)
+      "resPrefix"         .Release.Name
+      "forInitContainers" false
       ) | include "feature.containers" | fromYamlArray
   }}
   {{-
       $containers = concat $containers (default (list) .Values.extraContainers)
+  }}
+  {{-
+      $initContainers := (dict
+      "containers"        .Values.containers
+      "defaults"          (dict "resources" .Values.default_container_resources)
+      "resPrefix"         .Release.Name
+      "forInitContainers" true
+      ) | include "feature.containers" | fromYamlArray
   }}
 
   {{- /*
@@ -53,6 +62,9 @@
   }}
 
   {{- $_ := set $pod.spec "containers" $containers }}
+  {{- if and $initContainers (gt (len $initContainers) 0 ) }}
+      {{- $_ = set $pod.spec "initContainers" $initContainers }}
+  {{- end }}
   {{- if and $volumes (gt (len $volumes) 0 ) }}
       {{- $_ = set $pod.spec "volumes" $volumes }}
   {{- end }}
