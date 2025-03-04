@@ -2,7 +2,7 @@
 export HUMANITEC_ORG=FIXME
 export HUMANITEC_TOKEN=FIXME
 
-WORKLOAD_PROFILE=default-module
+WORKLOAD_PROFILE=statefulset
 ```
 
 ## Test locally the Helm chart

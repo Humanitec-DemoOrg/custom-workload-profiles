@@ -1,9 +1,9 @@
 apiVersion: v2
 
-name: default-module
-description: A Default Helm chart for a workload deployed by Humanitec
+name: statefulset
+description: An Helm chart for a workload deployed as StatefulSet by Humanitec
 type: application
 
-version: 1.17.6
+version: 2.1.0
 
 appVersion: 0.0.0
