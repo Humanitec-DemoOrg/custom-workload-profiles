@@ -1,0 +1,39 @@
+deployment:
+  annotations:
+    new-annotation: deployment-annotation
+  labels:
+    new-label: deployment-label
+
+pod:
+  annotations:
+    new-annotation: pod-annotation
+  labels:
+    new-label: pod-label
+
+# The top level "legacy" properties will be overridden by the pod versions
+annotations:
+  new-annotation: will-be-overridden
+  legacy-annotation: will-remain
+# The top level "legacy" properties will be overridden by the pod versions
+labels:
+  new-label: will-be-overridden
+  legacy-label: will-remain
+  
+
+containers:
+  main:
+    image: "busybox:latest"
+
+service:
+  ports: {}
+
+
+
+default_container_resources:
+  limits:
+    cpu: 250m
+    memory: 256Mi
+  requests:
+    cpu: 25m
+    memory: 64Mi
+
