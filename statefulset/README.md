@@ -11,16 +11,6 @@ WORKLOAD_PROFILE=statefulset
 helm template ${WORKLOAD_PROFILE} -f ${WORKLOAD_PROFILE}/sample-new-schema.yaml --debug
 ```
 
-## Register the Workload Profile
-
-```bash
-payload=$(cat ${WORKLOAD_PROFILE}/profile.json | \
-  jq -rM '. + {"id": "'${WORKLOAD_PROFILE}'", "version": "1.0.0", "workload_profile_chart": { "id": "'${WORKLOAD_PROFILE}'", "version": "latest" } }')
-
-humctl api post /orgs/${HUMANITEC_ORG}/workload-profiles \
-  -d "$payload"
-```
-
 ## Upload a new Helm chart version for this Workload Profile
 
 ```bash
@@ -34,6 +24,16 @@ curl "https://api.humanitec.io/orgs/${HUMANITEC_ORG}/workload-profile-chart-vers
   -X POST \
   -F "file=@${WORKLOAD_PROFILE}-${PROFILE_VERSION}.tgz" \
   -H "Authorization: Bearer ${HUMANITEC_TOKEN}"
+```
+
+## Register the Workload Profile
+
+```bash
+payload=$(cat ${WORKLOAD_PROFILE}/profile.json | \
+  jq -rM '. + {"id": "'${WORKLOAD_PROFILE}'", "version": "1.0.0", "workload_profile_chart": { "id": "'${WORKLOAD_PROFILE}'", "version": "latest" } }')
+
+humctl api post /orgs/${HUMANITEC_ORG}/workload-profiles \
+  -d "$payload"
 ```
 
 ## Test the Workload Profile
